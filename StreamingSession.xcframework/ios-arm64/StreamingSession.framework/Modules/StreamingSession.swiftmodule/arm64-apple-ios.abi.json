@@ -1580,6 +1580,89 @@
             "funcSelfKind": "NonMutating"
           },
           {
+            "kind": "Var",
+            "name": "isMicrophoneEnabled",
+            "printedName": "isMicrophoneEnabled",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Bool",
+                "printedName": "Swift.Bool",
+                "usr": "s:Sb"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvp",
+            "mangledName": "$s16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvp",
+            "moduleName": "StreamingSession",
+            "declAttributes": [
+              "Custom",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Bool",
+                    "printedName": "Swift.Bool",
+                    "usr": "s:Sb"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvg",
+                "mangledName": "$s16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvg",
+                "moduleName": "StreamingSession",
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Bool",
+                    "printedName": "Swift.Bool",
+                    "usr": "s:Sb"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvs",
+                "mangledName": "$s16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvs",
+                "moduleName": "StreamingSession",
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvM",
+                "mangledName": "$s16StreamingSession08FoveatedaB0C19isMicrophoneEnabledSbvM",
+                "moduleName": "StreamingSession",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
             "kind": "TypeDecl",
             "name": "Endpoint",
             "printedName": "Endpoint",
@@ -3642,7 +3725,7 @@
     {
       "filePath": "\/Library\/Caches\/com.apple.xbs\/Sources\/FoveatedStreaming_iOS\/FoveatedStreamingiOS\/UI\/PairingView.swift",
       "kind": "BooleanLiteral",
-      "offset": 7587,
+      "offset": 7571,
       "length": 5,
       "value": "false"
     },

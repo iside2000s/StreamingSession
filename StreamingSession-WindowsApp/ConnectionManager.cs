@@ -169,6 +169,11 @@ namespace FoveatedStreaming.WindowsSample
                 _viewModel.QRImageSource = null;
             });
 
+            if (_sessionManagement != null)
+            {
+                await _sessionManagement.DisposeAsync();
+            }
+
             if (_cloudXR != null)
             {
                 _cloudXR.StateChanged -= this.OnCloudXRStateChange;
@@ -176,11 +181,6 @@ namespace FoveatedStreaming.WindowsSample
 
             _cloudXR?.Dispose();
             _bonjour?.Dispose();
-
-            if (_sessionManagement != null)
-            {
-                await _sessionManagement.DisposeAsync();
-            }
 
             _cloudXR = null;
             _bonjour = null;

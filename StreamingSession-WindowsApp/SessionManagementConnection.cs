@@ -253,6 +253,19 @@ namespace FoveatedStreaming.WindowsSample
                     using (TcpClient client = await _currentListener.AcceptTcpClientAsync())
                     using (NetworkStream stream = client.GetStream())
                     {
+                        // TCP keepalive: detect dead peers (e.g. sudden device power-off)
+                        client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
+                        uint onOff = 1;
+                        uint keepAliveTime = 5000;     // 5s idle before first probe
+                        uint keepAliveInterval = 1000; // 1s between retries
+
+                        byte[] keepAliveSettings = new byte[12];
+                        BitConverter.GetBytes(onOff).CopyTo(keepAliveSettings, 0);
+                        BitConverter.GetBytes(keepAliveTime).CopyTo(keepAliveSettings, 4);
+                        BitConverter.GetBytes(keepAliveInterval).CopyTo(keepAliveSettings, 8);
+                        client.Client.IOControl(IOControlCode.KeepAliveValues, keepAliveSettings, null);
+
                         Console.WriteLine($"[TCP] Client connected: {client.Client.RemoteEndPoint}");
                         LogBuffer.Add($"[CONNECT] {client.Client.RemoteEndPoint}");
 
@@ -266,6 +279,16 @@ namespace FoveatedStreaming.WindowsSample
                             {
                                 break;
                             }
+                        }
+
+                        // If the session is still active, the device disconnected unexpectedly
+                        // (e.g. power-off, network loss). Synthesize the DISCONNECTED status
+                        // so the app tears down the same way as a graceful disconnect.
+                        if (this.currentSession != null)
+                        {
+                            SessionInformation sessionInfoSnapshot = this.currentSession.Value;
+                            currentSession = null;
+                            await _observer.SessionStatusDidChange(sessionInfoSnapshot, SessionStatus.Disconnected, cancellationToken);
                         }
 
                         this._currentClient.Close();
