@@ -30,7 +30,7 @@ StreamingSession-OpenXRSample/
 This sample uses the following OpenXR extensions:
 - `XR_KHR_D3D11_enable` - Direct3D 11 graphics API support
 - `XR_EXT_debug_utils` - Debug utilities for development
-- `XR_NVX1_opaque_data_channel` - Custom data channel for Apple Vision Pro communication
+- `XR_NVX1_opaque_data_channel` - Custom data channel for Cloud XR communication
 
 ## Building
 
@@ -44,7 +44,7 @@ This sample uses the following OpenXR extensions:
 - Windows 10 SDK (10.0 or newer)
 - OpenXR Loader (automatically included via NuGet package)
 - Direct3D 11 capable graphics card
-- OpenXR runtime (e.g., SteamVR, Windows Mixed Reality, or Apple Vision Pro runtime)
+- CloudXR runtime
 
 ## Running the Application
 

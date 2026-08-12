@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "StreamingSession",
     platforms: [
-        .iOS(.v18)
+        .iOS("27.0")
     ],
     products: [
         .library(

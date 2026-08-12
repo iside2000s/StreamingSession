@@ -1,7 +1,8 @@
 // swift-interface-format-version: 1.0
 // swift-compiler-version: Apple Swift version 6.2.3 effective-5.10 (swiftlang-6.2.3.3.21 clang-1700.6.3.2)
-// swift-module-flags: -target arm64-apple-ios26.1 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -user-module-version 13 -module-name StreamingSession
+// swift-module-flags: -target arm64-apple-ios26.1 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -user-module-version 17 -module-name StreamingSession
 // swift-module-flags-ignorable:  -formal-cxx-interoperability-mode=off -project-name FoveatedStreaming_iOS -interface-compiler-version 6.2.3
+import AVFAudio
 import AVFoundation
 import CloudXRKit
 import Combine
@@ -44,6 +45,36 @@ extension SwiftUICore.View {
 extension SwiftUICore.View {
   @_Concurrency.MainActor public func devicePairing(session: StreamingSession.FoveatedStreamingSession) -> some SwiftUICore.View
   
+}
+extension StreamingSession.FoveatedStreamingSession {
+  public enum InputCapability : Swift.Hashable, Swift.Equatable, Swift.Sendable, Swift.CaseIterable {
+    case microphone
+    public static func == (a: StreamingSession.FoveatedStreamingSession.InputCapability, b: StreamingSession.FoveatedStreamingSession.InputCapability) -> Swift.Bool
+    public typealias AllCases = [StreamingSession.FoveatedStreamingSession.InputCapability]
+    nonisolated public static var allCases: [StreamingSession.FoveatedStreamingSession.InputCapability] {
+      get
+    }
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+  public enum AuthorizationStatus : Swift.String, Swift.Hashable, Swift.Equatable, Swift.Sendable, Swift.Codable {
+    case authorized
+    case unauthorized
+    case notDetermined
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.String)
+    #endif
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @_Concurrency.MainActor public func requestAuthorization(for inputCapabilities: Swift.Set<StreamingSession.FoveatedStreamingSession.InputCapability>? = nil) async -> [StreamingSession.FoveatedStreamingSession.InputCapability : StreamingSession.FoveatedStreamingSession.AuthorizationStatus]
+  #endif
+  @_Concurrency.MainActor public func queryAuthorization(for inputCapabilities: Swift.Set<StreamingSession.FoveatedStreamingSession.InputCapability>) async -> [StreamingSession.FoveatedStreamingSession.InputCapability : StreamingSession.FoveatedStreamingSession.AuthorizationStatus]
 }
 extension StreamingSession.FoveatedStreamingSession {
   @_Concurrency.MainActor public var availableMessageChannels: [StreamingSession.FoveatedStreamingSession.MessageChannel.ID] {
@@ -150,9 +181,10 @@ extension StreamingSession.FoveatedStreamingSession.MessageChannel : nonisolated
   @_Concurrency.MainActor public func disconnect() async
   @_Concurrency.MainActor public func pause() async throws
   @_Concurrency.MainActor public func resume() async throws
-  @_Concurrency.MainActor public var isMicrophoneEnabled: Swift.Bool {
+  @_Concurrency.MainActor public var requestedInputCapabilities: Swift.Set<StreamingSession.FoveatedStreamingSession.InputCapability> {
     get
     set
+    _modify
   }
   @objc deinit
 }
@@ -166,4 +198,5 @@ extension StreamingSession.FoveatedStreamingSession : nonisolated Observation.Ob
   public typealias Body = @_opaqueReturnTypeOf("$s16StreamingSession08FoveatedA4ViewV4bodyQrvp", 0) __
 }
 extension StreamingSession.FoveatedStreamingSession : Swift.Sendable {}
+extension StreamingSession.FoveatedStreamingSession.AuthorizationStatus : Swift.RawRepresentable {}
 extension StreamingSession.FoveatedStreamingView : Swift.Sendable {}

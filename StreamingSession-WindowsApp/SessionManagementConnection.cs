@@ -122,6 +122,7 @@ namespace FoveatedStreaming.WindowsSample
         private SessionInformation? _currentSessionStorage;
         private bool _DidDispose;
         private readonly object _currentSessionLock = new object();
+        private bool _connectionClosedGracefully;
 
         /// <summary>Log buffer for diagnostic logging of SMC events.</summary>
         public LogBuffer LogBuffer { get; }
@@ -271,6 +272,7 @@ namespace FoveatedStreaming.WindowsSample
 
                         this._currentStream = stream;
                         this._currentClient = client;
+                        this._connectionClosedGracefully = false;
 
                         while (!cancellationToken.IsCancellationRequested && _currentClient.Connected)
                         {
@@ -281,10 +283,11 @@ namespace FoveatedStreaming.WindowsSample
                             }
                         }
 
-                        // If the session is still active, the device disconnected unexpectedly
-                        // (e.g. power-off, network loss). Synthesize the DISCONNECTED status
-                        // so the app tears down the same way as a graceful disconnect.
-                        if (this.currentSession != null)
+                        // If the session is still active and the peer did not close TCP
+                        // gracefully, the device disconnected unexpectedly (e.g. power-off,
+                        // network loss). Synthesize the DISCONNECTED status so the app
+                        // tears down the same way as a graceful disconnect.
+                        if (this.currentSession != null && !this._connectionClosedGracefully)
                         {
                             SessionInformation sessionInfoSnapshot = this.currentSession.Value;
                             currentSession = null;
@@ -329,6 +332,7 @@ namespace FoveatedStreaming.WindowsSample
             catch (SocketException)
             {
                 // The message failed to read due to a closed connection (this is considered normal - don't spawn a popup).
+                _connectionClosedGracefully = true;
                 return false;
             }
             catch (Exception e)
