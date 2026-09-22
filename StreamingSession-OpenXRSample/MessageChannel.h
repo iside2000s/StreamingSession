@@ -21,8 +21,8 @@
 XR_DEFINE_HANDLE(XrOpaqueDataChannelNV)
 
 // Structure type constants
-#define XR_TYPE_OPAQUE_DATA_CHANNEL_CREATE_INFO_NV ((XrStructureType)1000500000)
-#define XR_TYPE_OPAQUE_DATA_CHANNEL_STATE_NV ((XrStructureType)1000500001)
+#define XR_TYPE_OPAQUE_DATA_CHANNEL_CREATE_INFO_NV ((XrStructureType)1000526001)
+#define XR_TYPE_OPAQUE_DATA_CHANNEL_STATE_NV ((XrStructureType)1000526002)
 
 // Status enum
 typedef enum XrOpaqueDataChannelStatusNV {
@@ -32,22 +32,17 @@ typedef enum XrOpaqueDataChannelStatusNV {
 	XR_OPAQUE_DATA_CHANNEL_STATUS_DISCONNECTED_NV = 3,
 } XrOpaqueDataChannelStatusNV;
 
-// GUID structure (if not already defined)
-#ifndef XrGuid
-typedef struct XrGuid {
-	uint32_t data1;
-	uint16_t data2;
-	uint16_t data3;
-	uint8_t data4[8];
-} XrGuid;
-#endif
+// Matches the 16-byte XrUuidEXT layout used by XR_NV_opaque_data_channel.
+typedef struct XrOpaqueDataChannelUuidNV {
+	uint8_t data[16];
+} XrOpaqueDataChannelUuidNV;
 
 // Structure definitions
 typedef struct XrOpaqueDataChannelCreateInfoNV {
 	XrStructureType type;
 	const void* next;
 	XrSystemId systemId;
-	XrGuid uuid;
+	XrOpaqueDataChannelUuidNV uuid;
 } XrOpaqueDataChannelCreateInfoNV;
 
 typedef struct XrOpaqueDataChannelStateNV {
@@ -94,8 +89,8 @@ typedef XrResult(XRAPI_PTR* PFN_xrReceiveOpaqueDataChannelNV)(
 	uint8_t* opaqueDatas);
 
 // Error codes
-#define XR_ERROR_CHANNEL_ALREADY_CREATED_NV ((XrResult)-1000500000)
-#define XR_ERROR_CHANNEL_NOT_CONNECTED_NV ((XrResult)-1000500001)
+#define XR_ERROR_CHANNEL_ALREADY_CREATED_NV ((XrResult)-1000526000)
+#define XR_ERROR_CHANNEL_NOT_CONNECTED_NV ((XrResult)-1000526001)
 
 // Opaque data channel APIs
 extern PFN_xrCreateOpaqueDataChannelNV       ext_xrCreateOpaqueDataChannelNV;

@@ -1,0 +1,235 @@
+; Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+;
+; NVIDIA CORPORATION and its licensors retain all intellectual property
+; and proprietary rights in and to this software, related documentation
+; and any modifications thereto.  Any use, reproduction, disclosure or
+; distribution of this software and related documentation without an express
+; license agreement from NVIDIA CORPORATION is strictly prohibited.
+;
+;Module Name:
+;   nvcloudxrvad.inf
+;
+;Abstract:
+;    INF file for installing the NVIDIA CloudXR Virtual Audio driver
+
+[Version]
+Signature="$Windows NT$"
+Class=MEDIA
+Provider=%NV%
+ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
+DriverVer = 03/25/2026, 1.0.0.1
+PnpLockdown=1
+CatalogFile = nvcloudxrvad.cat
+
+[SourceDisksNames]
+222=%DiskDescription%,"",222
+
+[SourceDisksFiles]
+;nvcloudxrvad32.sys=222
+;nvcloudxrvad64.sys=222
+nvcloudxrvad32v.sys=222
+nvcloudxrvad64v.sys=222
+
+;;This syntax is only recognized on Windows XP and above- it is needed to install 64-bit drivers on
+;;Windows Server 2003 Service Pack 1 and above.
+
+[Manufacturer]
+%MfgName%=NVIDIA,NTx86,NTamd64
+
+;;  For Windows Server 2003 Service Pack 1 and above, a 64-bit OS will not install a driver
+;;  unless the Manufacturer and Models Sections explicitly show it is a driver for that platform
+;;  But the individual model section decorations (or lack thereof) work as they always have.
+;;  All of the model sections referred to are undecorated or NT-decorated, hence work on all platforms
+
+[NVIDIA]
+%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%=NVCLOUDXRVAD_WaveExtensible, USB\VID_0959&PID_9004 
+
+;; This section enables installing on x64 systems
+[NVIDIA.NTamd64]
+%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%=NVCLOUDXRVAD_WaveExtensible64, USB\VID_0959&PID_9004
+
+;; This section enables installing on x86 systems
+[NVIDIA.NTx86]
+%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%=NVCLOUDXRVAD_WaveExtensible, USB\VID_0959&PID_9004
+
+
+[DestinationDirs]
+NVCLOUDXRVAD_WaveExtensible.CopyList=12
+NVCLOUDXRVAD_WaveExtensible64.CopyList=12
+
+;======================================================
+; NVCLOUDXRVAD_WaveExtensible
+;======================================================
+[NVCLOUDXRVAD_WaveExtensible]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration,WDMAUDIO.Registration
+CopyFiles=NVCLOUDXRVAD_WaveExtensible.CopyList
+AddReg=NVCLOUDXRVAD_WaveExtensible.AddReg,NVCLOUDXRVAD32.AddReg
+
+[NVCLOUDXRVAD_WaveExtensible.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,NVCLOUDXRVAD.I.Topo
+
+[NVCLOUDXRVAD_WaveExtensible.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,swmidi,redbook"
+HKR,,Driver,,nvcloudxrvad32v.sys
+HKR,,NTMPDriver,,"nvcloudxrvad32v.sys,sbemul.sys"
+
+HKR,Drivers,SubClasses,,"wave,midi,mixer"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\midi\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%
+HKR,Drivers\midi\wdmaud.drv,Description,,%NVCLOUDXRVAD_MIDI%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%
+
+;======================================================
+; NVCLOUDXRVAD_WaveExtensible64
+;======================================================
+[NVCLOUDXRVAD_WaveExtensible64]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration,WDMAUDIO.Registration
+CopyFiles=NVCLOUDXRVAD_WaveExtensible64.CopyList
+AddReg=NVCLOUDXRVAD_WaveExtensible64.AddReg, NVCLOUDXRVAD64.AddReg
+
+[NVCLOUDXRVAD_WaveExtensible64.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,NVCLOUDXRVAD.I.Topo
+
+[NVCLOUDXRVAD_WaveExtensible64.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,swmidi,redbook"
+HKR,,Driver,,nvcloudxrvad64v.sys
+HKR,,NTMPDriver,,"nvcloudxrvad64v.sys,sbemul.sys"
+                                        
+HKR,Drivers,SubClasses,,"wave,midi,mixer"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\midi\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%
+HKR,Drivers\midi\wdmaud.drv,Description,,%NVCLOUDXRVAD_MIDI%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%NVCLOUDXRVAD_WaveExtensible.DeviceDesc%
+
+;======================================================
+; COMMON
+;======================================================
+[NVCLOUDXRVAD.I.Wave]
+AddReg=NVCLOUDXRVAD.I.Wave.AddReg
+[NVCLOUDXRVAD.I.Wave.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%NVCLOUDXRVAD.Wave.szPname%
+
+[NVCLOUDXRVAD.I.Topo]
+AddReg=NVCLOUDXRVAD.I.Topo.AddReg
+[NVCLOUDXRVAD.I.Topo.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%NVCLOUDXRVAD.Topo.szPname%
+
+
+;======================================================
+; NVCLOUDXRVAD_Extensible
+;======================================================
+[NVCLOUDXRVAD_WaveExtensible.NT]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=NVCLOUDXRVAD_WaveExtensible.CopyList
+AddReg=NVCLOUDXRVAD_WaveExtensible.AddReg,NVCLOUDXRVAD32.AddReg
+
+[NVCLOUDXRVAD_WaveExtensible.NT.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,NVCLOUDXRVAD.I.Topo
+
+[NVCLOUDXRVAD32.AddReg]
+HKR,Settings,PropertyFL,0x10001,0x00000000
+
+[NVCLOUDXRVAD_WaveExtensible.NT.Services]
+AddService=nvcloudxrvad_WaveExtensible,0x00000002,nvcloudxrvad_WaveExtensible_Service_Inst
+
+[nvcloudxrvad_WaveExtensible_Service_Inst]
+DisplayName=%nvcloudxrvad_WaveExtensible.SvcDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%10%\system32\drivers\nvcloudxrvad32v.sys
+
+;======================================================
+; NVCLOUDXRVAD_Extensible64
+;======================================================
+[NVCLOUDXRVAD_WaveExtensible64.NT]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=NVCLOUDXRVAD_WaveExtensible64.CopyList
+AddReg=NVCLOUDXRVAD_WaveExtensible64.AddReg,NVCLOUDXRVAD64.AddReg
+
+[NVCLOUDXRVAD_WaveExtensible64.NT.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,NVCLOUDXRVAD.I.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,NVCLOUDXRVAD.I.Topo
+
+
+[NVCLOUDXRVAD64.AddReg]
+HKR,Settings,PropertyFL,0x10001,0x00000000
+
+[MediaCategories.AddReg]
+HKLM,%MediaCategories%\%msguid.HDMIOut%,Name,,%mspin.HDMIOut%
+HKLM,%MediaCategories%\%msguid.HDMIOut%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%msguid.MICIn%,Name,,%mspin.MICIn%
+HKLM,%MediaCategories%\%msguid.MICIn%,Display,1,00,00,00,00
+
+[NVCLOUDXRVAD_WaveExtensible64.NT.Services]
+AddService=nvcloudxrvad_WaveExtensible,0x00000002,nvcloudxrvad_WaveExtensible64_Service_Inst
+
+[nvcloudxrvad_WaveExtensible64_Service_Inst]
+DisplayName=%nvcloudxrvad_WaveExtensible.SvcDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%10%\system32\drivers\nvcloudxrvad64v.sys
+
+
+[NVCLOUDXRVAD_WaveExtensible.CopyList]
+nvcloudxrvad32v.sys,,,0x00004000
+
+[NVCLOUDXRVAD_WaveExtensible64.CopyList]
+nvcloudxrvad64v.sys,,,0x00004000
+
+
+;======================================================
+; COMMON
+;======================================================
+[Strings]
+NV="NVIDIA"
+MfgName="NVIDIA"
+DiskDescription="NVCLOUDXRVAD Driver Disk"
+NVCLOUDXRVAD_WaveExtensible.DeviceDesc="NVIDIA CloudXR"
+
+NVCLOUDXRVAD.Wave.szPname="NVCLOUDXRVAD Wave"
+NVCLOUDXRVAD.Topo.szPname="NVCLOUDXRVAD Topology"
+NVCLOUDXRVAD_MIDI="NVCLOUDXRVAD -> WDM Midi Device"
+
+Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
+
+KSNAME_Wave="NVCloudXRWave"
+KSNAME_Topology="NVCloudXRTopology"
+
+NVCLOUDXRVAD_WaveExtensible.SvcDesc="NVIDIA CloudXR"
+
+MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
+
+msguid.HDMIOut                  ="{5E666DA3-DBB8-42A1-A765-BCA2BCBE4951}"
+mspin.HDMIOut                   ="Speakers"
+msguid.MICIn                  ="{C74936F7-382E-4265-A059-CFF45DCB409D}"
+mspin.MICIn                   ="Microphone"

@@ -1,0 +1,15 @@
+# CloudXR Runtime Configuration
+# This file configures the CloudXR OpenXR runtime behavior
+
+apiVersion: cloudxr.nvidia.com/v1beta1
+kind: OpenXRRuntimeConfiguration
+
+# Feature flags control various runtime features
+featureFlags:
+  deviceProfile: apple-vision-pro          # See: https://docs.nvidia.com/cloudxr-sdk/latest/usr_guide/cloudxr_runtime/runtime_mgmt_api.html#device-profile
+  runtimeFoveation: true                   # Enable foveated streaming.
+  runtimeFoveationUnwarpedWidth: 3800      # Unwarped render width for foveation
+  disableAlpha: true                       # Disable alpha channel encoding in the video stream. For applications that don’t use transparency, disabling alpha can save encoding time and bandwidth.
+  audioStreaming: true                     # Enable audio streaming from the server to the client.
+  micStreaming: true                       # Enable microphone streaming from the client to the server.
+  

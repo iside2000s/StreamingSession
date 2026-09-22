@@ -1,0 +1,19 @@
+Verbose [GENERAL | xrEnumerateInstanceExtensionProperties | OpenXR-Loader] : Entering loader trampoline
+Warning [GENERAL |  | OpenXR-Loader] : ReadLayerDataFilesInRegistry - failed to read registry location \ApiLayers\Implicit in either HKEY_LOCAL_MACHINE or HKEY_CURRENT_USER
+Info [GENERAL | xrEnumerateInstanceExtensionProperties | OpenXR-Loader] : RuntimeManifestFile::FindManifestFiles - using environment variable override runtime file D:\Tms\GitHub\My project\StreamingSession\StreamingSession-WindowsApp\bin\Release\Server\releases\6.2.3\openxr_cloudxr.json
+Info [GENERAL |  | OpenXR-Loader] : RuntimeManifestFile::CreateIfValid - attempting to load D:\Tms\GitHub\My project\StreamingSession\StreamingSession-WindowsApp\bin\Release\Server\releases\6.2.3\openxr_cloudxr.json
+Info [GENERAL | xrEnumerateInstanceExtensionProperties | OpenXR-Loader] : RuntimeInterface::LoadRuntime succeeded loading runtime defined in manifest file D:\Tms\GitHub\My project\StreamingSession\StreamingSession-WindowsApp\bin\Release\Server\releases\6.2.3\openxr_cloudxr.json using interface version 1 and OpenXR API version 1.1
+Verbose [GENERAL | xrEnumerateInstanceExtensionProperties | OpenXR-Loader] : Completed loader trampoline
+Verbose [GENERAL | xrEnumerateInstanceExtensionProperties | OpenXR-Loader] : Entering loader trampoline
+Warning [GENERAL |  | OpenXR-Loader] : ReadLayerDataFilesInRegistry - failed to read registry location \ApiLayers\Implicit in either HKEY_LOCAL_MACHINE or HKEY_CURRENT_USER
+Verbose [GENERAL | xrEnumerateInstanceExtensionProperties | OpenXR-Loader] : Completed loader trampoline
+Verbose [GENERAL | xrCreateInstance | OpenXR-Loader] : Entering loader trampoline
+Warning [GENERAL |  | OpenXR-Loader] : ReadLayerDataFilesInRegistry - failed to read registry location \ApiLayers\Implicit in either HKEY_LOCAL_MACHINE or HKEY_CURRENT_USER
+Warning [GENERAL |  | OpenXR-Loader] : ReadLayerDataFilesInRegistry - failed to read registry location \ApiLayers\Explicit in either HKEY_LOCAL_MACHINE or HKEY_CURRENT_USER
+Verbose [GENERAL | xrCreateInstance | OpenXR-Loader] : Entering LoaderInstance::CreateInstance
+Verbose [GENERAL | xrCreateInstance | OpenXR-Loader] : Entering loader terminator
+Verbose [GENERAL | xrCreateInstance | OpenXR-Loader] : Completed loader terminator
+Error [GENERAL | xrCreateInstance | OpenXR-Loader] : LoaderInstance::CreateInstance chained CreateInstance call failed
+Info [GENERAL | xrCreateInstance | OpenXR-Loader] : RuntimeInterface::UnloadRuntime - Unloading RuntimeInterface
+Info [GENERAL |  | OpenXR-Loader] : RuntimeInterface being destroyed.
+Error [GENERAL | xrCreateInstance | OpenXR-Loader] : xrCreateInstance failed

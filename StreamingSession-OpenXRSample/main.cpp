@@ -27,6 +27,8 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <fstream>
+#include <string>
 #include <windows.h>
 #include "MessageChannel.h"
 
@@ -94,6 +96,27 @@ XrSystemId                 xr_system_id     = XR_NULL_SYSTEM_ID;
 vector<XrView>                  xr_views;
 vector<XrViewConfigurationView> xr_config_views;
 vector<swapchain_t>             xr_swapchains;
+string                          openxr_error;
+
+bool openxr_check(XrResult result, const char* operation) {
+	if (XR_SUCCEEDED(result))
+		return true;
+
+	char result_text[XR_MAX_RESULT_STRING_SIZE] = {};
+	if (xr_instance != XR_NULL_HANDLE)
+		xrResultToString(xr_instance, result, result_text);
+
+	char message[1024];
+	if (result_text[0] != '\0')
+		sprintf_s(message, "%s failed: %s (%d)", operation, result_text, result);
+	else
+		sprintf_s(message, "%s failed with XrResult %d", operation, result);
+
+	openxr_error = message;
+	openxr_error += "\n";
+	OutputDebugStringA(openxr_error.c_str());
+	return false;
+}
 
 bool openxr_init(const char* app_name, int64_t swapchain_format);
 void openxr_shutdown();
@@ -288,7 +311,11 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, int) {
 
 	if (!openxr_init("3D Cube", d3d_swapchain_fmt)) {
 		d3d_shutdown();
-		MessageBox(nullptr, "OpenXR initialization failed\n", "Error", 1);
+		if (openxr_error.empty())
+			openxr_error = "OpenXR initialization failed.";
+		std::ofstream error_log("openxr_init_error.log", std::ios::trunc);
+		error_log << openxr_error << std::endl;
+		MessageBoxA(nullptr, openxr_error.c_str(), "OpenXR initialization failed", MB_OK | MB_ICONERROR);
 		return 1;
 	}
 	app_init();
@@ -361,13 +388,17 @@ bool openxr_init(const char* app_name, int64_t swapchain_format) {
 	const char* ask_extensions[] = { 
 		XR_KHR_D3D11_ENABLE_EXTENSION_NAME, // Use Direct3D11 for rendering
 		XR_EXT_DEBUG_UTILS_EXTENSION_NAME,  // Debug utils for extra info
-		"XR_NVX1_opaque_data_channel",
+		"XR_NV_opaque_data_channel",
 	};
 
 	uint32_t ext_count = 0;
-	xrEnumerateInstanceExtensionProperties(nullptr, 0, &ext_count, nullptr);
+	if (!openxr_check(xrEnumerateInstanceExtensionProperties(nullptr, 0, &ext_count, nullptr),
+		"xrEnumerateInstanceExtensionProperties(count)"))
+		return false;
 	vector<XrExtensionProperties> xr_exts(ext_count, { XR_TYPE_EXTENSION_PROPERTIES });
-	xrEnumerateInstanceExtensionProperties(nullptr, ext_count, &ext_count, xr_exts.data());
+	if (!openxr_check(xrEnumerateInstanceExtensionProperties(nullptr, ext_count, &ext_count, xr_exts.data()),
+		"xrEnumerateInstanceExtensionProperties(list)"))
+		return false;
 
 	OutputDebugStringA("OpenXR extensions available:\n");
 	for (size_t i = 0; i < xr_exts.size(); i++) {
@@ -384,8 +415,10 @@ bool openxr_init(const char* app_name, int64_t swapchain_format) {
 	if (!std::any_of(use_extensions.begin(), use_extensions.end(),
 		[](const char* ext) {
 			return strcmp(ext, XR_KHR_D3D11_ENABLE_EXTENSION_NAME) == 0;
-		}))
+		})) {
+		openxr_error = "CloudXR did not expose XR_KHR_D3D11_enable.";
 		return false;
+	}
 
 	// Initialize OpenXR with the extensions we've found
 	XrInstanceCreateInfo createInfo = { XR_TYPE_INSTANCE_CREATE_INFO };
@@ -393,16 +426,16 @@ bool openxr_init(const char* app_name, int64_t swapchain_format) {
 	createInfo.enabledExtensionNames      = use_extensions.data();
 	createInfo.applicationInfo.apiVersion = XR_CURRENT_API_VERSION;
 	strcpy_s(createInfo.applicationInfo.applicationName, app_name);
-	xrCreateInstance(&createInfo, &xr_instance);
-
-	// Check if OpenXR is available on this system. If null, an OpenXR runtime
-	// must be installed and activated.
-	if (xr_instance == nullptr)
+	if (!openxr_check(xrCreateInstance(&createInfo, &xr_instance), "xrCreateInstance"))
 		return false;
 
 	xrGetInstanceProcAddr(xr_instance, "xrCreateDebugUtilsMessengerEXT", (PFN_xrVoidFunction*)(&ext_xrCreateDebugUtilsMessengerEXT));
 	xrGetInstanceProcAddr(xr_instance, "xrDestroyDebugUtilsMessengerEXT", (PFN_xrVoidFunction*)(&ext_xrDestroyDebugUtilsMessengerEXT));
 	xrGetInstanceProcAddr(xr_instance, "xrGetD3D11GraphicsRequirementsKHR", (PFN_xrVoidFunction*)(&ext_xrGetD3D11GraphicsRequirementsKHR));
+	if (!ext_xrGetD3D11GraphicsRequirementsKHR) {
+		openxr_error = "CloudXR did not provide xrGetD3D11GraphicsRequirementsKHR.";
+		return false;
+	}
 
 	// Opaque data channel APIs
 	xrGetInstanceProcAddr(xr_instance, "xrCreateOpaqueDataChannelNV", (PFN_xrVoidFunction*)(&ext_xrCreateOpaqueDataChannelNV));
@@ -448,34 +481,49 @@ bool openxr_init(const char* app_name, int64_t swapchain_format) {
 	// Request a form factor from the device (HMD, Handheld, etc.)
 	XrSystemGetInfo systemInfo = { XR_TYPE_SYSTEM_GET_INFO };
 	systemInfo.formFactor = app_config_form;
-	xrGetSystem(xr_instance, &systemInfo, &xr_system_id);
+	XrResult system_result = xrGetSystem(xr_instance, &systemInfo, &xr_system_id);
+	if (!openxr_check(system_result, "xrGetSystem")) {
+		if (system_result == XR_ERROR_FORM_FACTOR_UNAVAILABLE)
+			openxr_error += "Connect the Apple Vision Pro CloudXR client before launching this sample.";
+		return false;
+	}
 
 	XrGraphicsRequirementsD3D11KHR requirement = { XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR };
-	ext_xrGetD3D11GraphicsRequirementsKHR(xr_instance, xr_system_id, &requirement);
-	if (!d3d_init(requirement.adapterLuid))
+	if (!openxr_check(ext_xrGetD3D11GraphicsRequirementsKHR(xr_instance, xr_system_id, &requirement),
+		"xrGetD3D11GraphicsRequirementsKHR"))
 		return false;
+	if (!d3d_init(requirement.adapterLuid)) {
+		openxr_error = "Failed to create a D3D11 device on the GPU requested by CloudXR.";
+		return false;
+	}
 
 	XrGraphicsBindingD3D11KHR binding = { XR_TYPE_GRAPHICS_BINDING_D3D11_KHR };
 	binding.device = d3d_device;
 	XrSessionCreateInfo sessionInfo = { XR_TYPE_SESSION_CREATE_INFO };
 	sessionInfo.next     = &binding;
 	sessionInfo.systemId = xr_system_id;
-	xrCreateSession(xr_instance, &sessionInfo, &xr_session);
-
-	// Unable to start a session, may not have an MR device attached or ready
-	if (xr_session == nullptr)
+	if (!openxr_check(xrCreateSession(xr_instance, &sessionInfo, &xr_session), "xrCreateSession"))
 		return false;
 
 	XrReferenceSpaceCreateInfo ref_space = { XR_TYPE_REFERENCE_SPACE_CREATE_INFO };
 	ref_space.poseInReferenceSpace = xr_pose_identity;
 	ref_space.referenceSpaceType   = XR_REFERENCE_SPACE_TYPE_LOCAL;
-	xrCreateReferenceSpace(xr_session, &ref_space, &xr_app_space);
+	if (!openxr_check(xrCreateReferenceSpace(xr_session, &ref_space, &xr_app_space), "xrCreateReferenceSpace"))
+		return false;
 
 	uint32_t view_count = 0;
-	xrEnumerateViewConfigurationViews(xr_instance, xr_system_id, app_config_view, 0, &view_count, nullptr);
+	if (!openxr_check(xrEnumerateViewConfigurationViews(xr_instance, xr_system_id, app_config_view, 0, &view_count, nullptr),
+		"xrEnumerateViewConfigurationViews(count)"))
+		return false;
+	if (view_count == 0) {
+		openxr_error = "CloudXR returned no views for the requested stereo configuration.";
+		return false;
+	}
 	xr_config_views.resize(view_count, { XR_TYPE_VIEW_CONFIGURATION_VIEW });
 	xr_views.resize(view_count, { XR_TYPE_VIEW });
-	xrEnumerateViewConfigurationViews(xr_instance, xr_system_id, app_config_view, view_count, &view_count, xr_config_views.data());
+	if (!openxr_check(xrEnumerateViewConfigurationViews(xr_instance, xr_system_id, app_config_view, view_count, &view_count, xr_config_views.data()),
+		"xrEnumerateViewConfigurationViews(list)"))
+		return false;
 	for (uint32_t i = 0; i < view_count; i++) {
 		XrViewConfigurationView& view           = xr_config_views[i];
 		XrSwapchainCreateInfo    swapchain_info = { XR_TYPE_SWAPCHAIN_CREATE_INFO };

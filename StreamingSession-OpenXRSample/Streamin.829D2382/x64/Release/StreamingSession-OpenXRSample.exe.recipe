@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>D:\Tms\GitHub\My project\StreamingSession\StreamingSession-OpenXRSample\x64\Release\StreamingSession-OpenXRSample.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>D:\Tms\GitHub\My project\StreamingSession\StreamingSession-OpenXRSample\packages\OpenXR.Loader.1.0.6.2\native\x64\release\bin\openxr_loader.dll</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>

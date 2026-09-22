@@ -1,0 +1,14 @@
+ERROR [ipc_connect_pipe] Connect to \\.\pipe\C:\Users\Admin\AppData\Local\Temp\/ipc_cloudxr failed: 5 ¾Ü¾ø·ÃÎÊ¡£
+
+ERROR [ipc_client_connection_init] Failed to connect to monado service process
+
+###
+#
+# Please make sure that the service process is running
+#
+# It is called "monado-service"
+# In build trees, it is located "build-dir/src/xrt/targets/service/monado-service"
+#
+###
+Error [GENERAL | xrCreateInstance | OpenXR-Loader] : LoaderInstance::CreateInstance chained CreateInstance call failed
+Error [GENERAL | xrCreateInstance | OpenXR-Loader] : xrCreateInstance failed
