@@ -2,6 +2,14 @@
 
 日期：2026-10-29。Windows 11 Pro build 26200、RTX 5070、驱动 32.0.16.2101。
 
+## 最后一次容器尝试：等待手动重启
+
+用户在此前暂缓系统变更后，明确要求“最后再试一下 Windows 进程容器”。已于 2026-10-29 07:19:36 UTC 通过 Windows UAC 启动管理员 PowerShell，运行本目录 `Enable-ContainerLab.ps1`。实际报告为 `Succeeded=True`、`Changed=True`、`RestartNeeded=True`、`AutomaticRestart=False`，原始报告保存在忽略的 `state/feature-enable.json`。
+
+随后只读复查显示 Containers 已 Enabled，Hyper-V、WSL、VirtualMachinePlatform 仍为 Disabled。未自动重启，也未启动容器引擎或下载镜像层。下一步由用户保存工作并手动重启，再复查组件与服务，运行 `Start-ContainerEngine.ps1` 和 `Test-ContainerGpu.ps1`。GPU/NVENC 与 CloudXR 双头显能力仍未验证。
+
+## 此前准备阶段的结果
+
 | 检查 | 实测结果 |
 | --- | --- |
 | 本机 D3D11 硬件设备与 NVENC H.264 单帧编码 | 通过，256×256，86 字节输出 |

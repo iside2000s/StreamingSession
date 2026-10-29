@@ -2,13 +2,13 @@
 
 目标：先验证一个 Windows 进程容器是否能同时拥有独立的 UDP 端口空间、访问 RTX 5070 并完成 NVENC 编码。通过后才值得接入 CloudXR；当前不包含容器版配对服务或多人场景。
 
-**当前决定：用户于 2026-10-29 选择暂不修改系统组件。** 本目录保留准备结果，实际启用步骤未执行；继续这条部署路径需要用户后续明确改变这一约束。
+**当前状态（2026-10-29 07:19 UTC）：用户已授权最后一次 Windows 进程容器尝试。** 已通过管理员进程执行 Containers 功能启用，返回 `Succeeded=True`、`Changed=True`、`RestartNeeded=True`。等待用户保存工作并手动重启；尚未启动容器引擎或下载镜像层。重启后从 `Get-IsolationReadiness.ps1` 复查，再运行引擎和 GPU/端口探针。
 
 ## 当前已经做到什么
 
 2026-10-29，Windows 11 Pro build 26200：主机上已成功用 D3D11 纹理编码一帧 256×256 H.264，获得 86 字节输出。Docker 29.9.2 的官方便携二进制已下载到忽略的 `out/`，没有安装服务或启动引擎。
 
-只读检查显示 `Containers`、Hyper-V、WSL 和 VirtualMachinePlatform 均为 Disabled，当前进程没有管理员权限。容器内的 UDP 隔离、GPU、NVENC、CloudXR 和双头显均未验证。CPU 虚拟化属性在已有 hypervisor 的环境中可能被屏蔽，本实验不据此判断 BIOS 一定关闭了虚拟化。
+准备阶段的只读检查显示 `Containers`、Hyper-V、WSL 和 VirtualMachinePlatform 均为 Disabled。最新检查显示 Containers 已 Enabled，其他三项仍为 Disabled；功能启用报告要求重启。容器内的 UDP 隔离、GPU、NVENC、CloudXR 和双头显均未验证。CPU 虚拟化属性在已有 hypervisor 的环境中可能被屏蔽，本实验不据此判断 BIOS 一定关闭了虚拟化。
 
 便携引擎的 `--validate` 命令也已实际尝试，在配置验证前即提示缺少 `vmcompute.dll`，要求安装 Containers 功能。这是目前必须先启用系统组件的直接依据；没有引擎或容器启动成功。完整记录见 [RESULTS.md](RESULTS.md)。
 
