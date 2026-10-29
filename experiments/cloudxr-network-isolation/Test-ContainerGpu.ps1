@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param()
+param([switch]$UseOfflineImage)
 $ErrorActionPreference = 'Stop'
 $manifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'state\engine.json') -Raw | ConvertFrom-Json
 $client = $manifest.DockerClient
@@ -9,13 +9,26 @@ if ($client -ne $expected -or $endpoint -ne 'npipe:////./pipe/streamingsession-c
 $payload = Join-Path $PSScriptRoot 'out\payload'
 if (-not (Test-Path -LiteralPath (Join-Path $payload 'GpuEncodeProbe.exe'))) { throw 'Run Build-LabTools.ps1 first.' }
 $image = 'mcr.microsoft.com/windows/server@sha256:c241b18ec3d59e82992722b473fa19e290fd27cb7819fe69a0f4ad31130a245a'
+if ($UseOfflineImage) {
+    # The config digest from that same pinned Microsoft manifest is Docker's image ID.
+    $image = 'sha256:7fb65857422af705198cd96f6a4481cde176dddf4cb1b8bc869d74ec51b0f06d'
+}
 $ErrorActionPreference = 'Continue'
 try { & $client --host $endpoint image inspect $image *> $null; $imageExitCode = $LASTEXITCODE }
 finally { $ErrorActionPreference = 'Stop' }
 if ($imageExitCode -ne 0) {
-    Write-Output 'Pulling the Microsoft Windows Server 2025 full base image for this GPU test.'
-    & $client --host $endpoint pull $image
-    if ($LASTEXITCODE -ne 0) { throw 'Microsoft base image pull failed.' }
+    if ($UseOfflineImage) {
+        $archive = Join-Path $PSScriptRoot 'out\image-download\windows-server-2025.tar'
+        if (-not (Test-Path -LiteralPath $archive)) { throw 'Run Prepare-OfflineImage.ps1 first.' }
+        & $client --host $endpoint load --input $archive
+        if ($LASTEXITCODE -ne 0) { throw 'Verified Microsoft image archive load failed.' }
+        & $client --host $endpoint image inspect $image --format '{{.Id}}'
+        if ($LASTEXITCODE -ne 0) { throw 'The loaded image does not match the pinned Microsoft configuration digest.' }
+    } else {
+        Write-Output 'Pulling the Microsoft Windows Server 2025 full base image for this GPU test.'
+        & $client --host $endpoint pull $image
+        if ($LASTEXITCODE -ne 0) { throw 'Microsoft base image pull failed.' }
+    }
 }
 $bound = [Collections.Generic.List[Net.Sockets.Socket]]::new()
 $run = Join-Path $PSScriptRoot ('state\gpu-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fff'))

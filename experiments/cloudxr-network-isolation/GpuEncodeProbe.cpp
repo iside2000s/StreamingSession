@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 using Microsoft::WRL::ComPtr;
 
@@ -72,8 +74,15 @@ int main(int argc, char** argv)
 {
     try {
         BoundPorts boundPorts;
-        if (argc == 2 && std::string(argv[1]) == "--bind-udp") boundPorts.Bind();
-        else if (argc != 1) throw std::runtime_error("Only the optional --bind-udp argument is supported");
+        int holdSeconds = 0;
+        for (int index = 1; index < argc; ++index) {
+            const std::string argument = argv[index];
+            if (argument == "--bind-udp") boundPorts.Bind();
+            else if (argument == "--hold-seconds" && index + 1 < argc) {
+                holdSeconds = std::stoi(argv[++index]);
+                if (holdSeconds < 1 || holdSeconds > 120) throw std::runtime_error("hold-seconds must be 1..120");
+            } else throw std::runtime_error("Expected --bind-udp or --hold-seconds N");
+        }
         ComPtr<IDXGIFactory1> factory;
         if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&factory)))) throw std::runtime_error("CreateDXGIFactory1 failed");
         ComPtr<IDXGIAdapter1> adapter;
@@ -182,6 +191,10 @@ int main(int argc, char** argv)
         Check(encoder.api.nvEncUnlockBitstream(encoder.session, encoder.output), "UnlockBitstream");
         if (size == 0) throw std::runtime_error("Encoder returned no bytes");
         std::cout << "PASS D3D11_NVENC_H264 width=256 height=256 encoded_bytes=" << size << std::endl;
+        if (holdSeconds) {
+            std::cout << "READY HOLDING_GPU_SESSION seconds=" << holdSeconds << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(holdSeconds));
+        }
         return 0;
     }
     catch (const std::exception& error) {

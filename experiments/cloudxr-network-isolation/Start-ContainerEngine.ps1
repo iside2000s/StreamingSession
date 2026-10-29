@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param()
+param([string]$DownloadProxy, [switch]$EngineDebug)
 $ErrorActionPreference = 'Stop'
 $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'An administrator PowerShell is required.' }
@@ -22,8 +22,26 @@ $null = New-Item -ItemType Directory -Path $state -Force
 $config = Join-Path $state 'daemon.json'
 $data = Join-Path $state 'engine-data'
 $hostEndpoint = 'npipe:////./pipe/' + $pipeName
-@{'hosts'=@($hostEndpoint); 'data-root'=$data; 'pidfile'=(Join-Path $state 'dockerd.pid'); 'bridge'='none'} |
-    ConvertTo-Json | Set-Content -LiteralPath $config -Encoding ASCII
+$pidPath = Join-Path $state 'dockerd.pid'
+if (Test-Path -LiteralPath $pidPath) {
+    $recordedPid = 0
+    if (-not [int]::TryParse((Get-Content -LiteralPath $pidPath -Raw).Trim(), [ref]$recordedPid)) { throw 'Invalid lab PID file; nothing was removed.' }
+    $recordedProcess = Get-Process -Id $recordedPid -ErrorAction SilentlyContinue
+    if ($recordedProcess -and -not $recordedProcess.HasExited) { throw 'The lab PID file still identifies a live process; nothing was removed.' }
+    Remove-Item -LiteralPath $pidPath
+}
+$daemonConfiguration = @{'hosts'=@($hostEndpoint); 'data-root'=$data; 'pidfile'=(Join-Path $state 'dockerd.pid'); 'bridge'='none'}
+if ($EngineDebug) { $daemonConfiguration['debug'] = $true }
+if ($DownloadProxy) {
+    $proxyUri = $null
+    if (-not [Uri]::TryCreate($DownloadProxy, [UriKind]::Absolute, [ref]$proxyUri) -or
+        $proxyUri.Scheme -notin @('http','https') -or $proxyUri.UserInfo) {
+        throw 'DownloadProxy must be an HTTP(S) proxy URL without embedded credentials.'
+    }
+    # Only this lab engine uses the proxy. Windows proxy settings are not changed.
+    $daemonConfiguration['proxies'] = @{'http-proxy'=$DownloadProxy; 'https-proxy'=$DownloadProxy; 'no-proxy'='localhost,127.0.0.1'}
+}
+$daemonConfiguration | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $config -Encoding ASCII
 $process = Start-Process -FilePath $engine -ArgumentList ('--config-file "' + $config + '"') -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $state 'engine.stdout.log') -RedirectStandardError (Join-Path $state 'engine.stderr.log')
 @{ProcessId=$process.Id; StartTimeUtc=$process.StartTime.ToUniversalTime().ToString('o'); Executable=$engine; DockerClient=$client; HostEndpoint=$hostEndpoint; DataDirectory=$data} |
     ConvertTo-Json | Set-Content -LiteralPath $manifestPath -Encoding UTF8

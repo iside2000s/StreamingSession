@@ -13,4 +13,5 @@ $containers = & $manifest.DockerClient --host $manifest.HostEndpoint ps --quiet
 if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect engine containers. Nothing was stopped.' }
 if ($containers) { throw 'A container is still running in this lab engine. Finish that test before stopping the engine.' }
 Stop-Process -Id $process.Id
+if (-not $process.WaitForExit(10000)) { throw 'The owned engine has not exited yet; wait before restarting it.' }
 Write-Output 'Only the recorded lab engine was stopped. Its images and state were preserved.'
