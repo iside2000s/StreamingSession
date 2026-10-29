@@ -37,9 +37,10 @@ $rows = foreach ($seat in @('a', 'b')) {
     }
 }
 if ($AsJson) {
-    [pscustomobject]@{Status=$manifest.Status; RunDirectory=$manifest.RunDirectory; Seats=@($rows)} | ConvertTo-Json -Depth 4
+    [pscustomobject]@{Status=$manifest.Status; NetworkMode=$manifest.NetworkMode; RunDirectory=$manifest.RunDirectory; Seats=@($rows)} | ConvertTo-Json -Depth 4
 }
 else {
+    Write-Output ('Network mode: ' + $manifest.NetworkMode)
     $rows | Format-Table Seat,ProcessAlive,Runtime,OpenXRApp,Headset,Session,Client,ObservedMediaBindConflicts -AutoSize
     Write-Output ('Logs: ' + $manifest.RunDirectory)
 }

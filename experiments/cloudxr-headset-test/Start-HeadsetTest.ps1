@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$HostAddress,
     [string]$BundleId = 'com.cloudxr.visionos',
+    [ValidateSet('NativeFixed', 'IceAutomatic')][string]$NetworkMode = 'NativeFixed',
     [ValidateRange(1, 120)][int]$MaximumMinutes = 60,
     [switch]$SkipBuild,
     [switch]$PrepareOnly
@@ -18,7 +19,9 @@ $existing = @(Get-Process -Name CloudXrService, NvStreamManager, SignalingGatewa
 if ($existing.Count) { throw 'A streaming runtime/manager/gateway is already running. No existing process was stopped.' }
 $network = [Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
 $busyPorts = @($network.GetActiveTcpListeners().Port) + @($network.GetActiveUdpListeners().Port)
-foreach ($port in @(48322, 55001, 55002, 50110, 50120, 50210, 50220)) {
+$requiredPorts = @(48322, 55001, 55002, 50110, 50210)
+if ($NetworkMode -eq 'NativeFixed') { $requiredPorts += @(50120, 50220) }
+foreach ($port in $requiredPorts) {
     if ($busyPorts -contains $port) { throw ('Test port is already in use: ' + $port) }
 }
 if (-not $SkipBuild) {
@@ -46,7 +49,8 @@ for ($index = 0; $index -lt 2; $index++) {
         HostAddress = $HostAddress
         SessionPort = 55001 + $index
         SignalingPort = 50110 + (100 * $index)
-        MediaPort = 50120 + (100 * $index)
+        MediaPort = $(if ($NetworkMode -eq 'IceAutomatic') { 0 } else { 50120 + (100 * $index) })
+        EnableIce = ($NetworkMode -eq 'IceAutomatic')
         StateDirectory = $directory
         RouteDirectory = $routes
         BundleId = $BundleId
@@ -54,7 +58,8 @@ for ($index = 0; $index -lt 2; $index++) {
         AutoStart = $true
     }
     $seat | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'seat.json') -Encoding UTF8
-    $yaml = "apiVersion: cloudxr.nvidia.com/v1beta1`nkind: OpenXRRuntimeConfiguration`nfeatureFlags:`n  deviceProfile: apple-vision-pro`n  serverPort: $($seat.SignalingPort)`n  mediaPort: $($seat.MediaPort)`n  endpointIp: $HostAddress`n  runtimeFoveation: true`n  runtimeFoveationUnwarpedWidth: 1920`n  disableAlpha: false`n  audioStreaming: false`n  micStreaming: false`n"
+    $ice = $seat.EnableIce.ToString().ToLowerInvariant()
+    $yaml = "apiVersion: cloudxr.nvidia.com/v1beta1`nkind: OpenXRRuntimeConfiguration`nfeatureFlags:`n  deviceProfile: apple-vision-pro`n  serverPort: $($seat.SignalingPort)`n  mediaPort: $($seat.MediaPort)`n  enableIce: $ice`n  endpointIp: $HostAddress`n  runtimeFoveation: true`n  runtimeFoveationUnwarpedWidth: 1920`n  disableAlpha: false`n  audioStreaming: false`n  micStreaming: false`n"
     [IO.File]::WriteAllText((Join-Path $directory 'runtime.yaml'), $yaml)
     $seats += [pscustomobject]$seat
 }
@@ -75,6 +80,7 @@ $gatewayPath = Join-Path $run 'gateway.json'
 $gatewayConfig | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $gatewayPath -Encoding UTF8
 $manifest = [ordered]@{
     HostAddress = $HostAddress
+    NetworkMode = $NetworkMode
     RunDirectory = $run
     StopFile = (Join-Path $run 'coordinator.stop')
     CoordinatorPid = $PID
@@ -89,6 +95,7 @@ function Save-Manifest {
 }
 Save-Manifest
 Write-Output ('Test state: ' + $run)
+Write-Output ('Network mode: ' + $NetworkMode + ' (experimental; simultaneous native streaming is not verified)')
 if ($PrepareOnly) { return }
 
 [Reflection.Assembly]::LoadFrom($app) | Out-Null

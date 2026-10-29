@@ -258,6 +258,48 @@ static void GraphicsSession(const Options& options, PFN_xrGetInstanceProcAddr ge
     Marker("XR_GRAPHICS_HOLD_END");
 }
 
+// Query only documented network properties through the public API. This does
+// not start a runtime, bind a port, or establish a headset connection.
+static int NetworkProperties(const Options& options, const fs::path& runtime)
+{
+    HMODULE module = Load(runtime / L"cloudxr.dll");
+    auto create = Symbol<PFN_nv_cxr_service_create>(module, "nv_cxr_service_create");
+    auto destroy = Symbol<PFN_nv_cxr_service_destroy>(module, "nv_cxr_service_destroy");
+    auto setString = Symbol<PFN_nv_cxr_service_set_string_property>(module, "nv_cxr_service_set_string_property");
+    auto setInteger = Symbol<PFN_nv_cxr_service_set_int64_property>(module, "nv_cxr_service_set_int64_property");
+    auto setBoolean = Symbol<PFN_nv_cxr_service_set_boolean_property>(module, "nv_cxr_service_set_boolean_property");
+    auto getInteger = Symbol<PFN_nv_cxr_service_get_int64_property>(module, "nv_cxr_service_get_int64_property");
+    auto getBoolean = Symbol<PFN_nv_cxr_service_get_boolean_property>(module, "nv_cxr_service_get_boolean_property");
+    nv_cxr_service* service = nullptr;
+    if (create(&service) != NV_CXR_SUCCESS) throw std::runtime_error("Could not create property probe service");
+    const auto check = [](nv_cxr_result_t result, const char* name) {
+        if (result != NV_CXR_SUCCESS) throw std::runtime_error(std::string("Property operation failed: ") + name + " result=" + std::to_string(result));
+    };
+    try {
+        const char* profile = "apple-vision-pro";
+        check(setString(service, "device-profile", strlen("device-profile"), profile, strlen(profile)), "device-profile");
+        bool ice = false;
+        int64_t media = -1;
+        check(getBoolean(service, "enable-ice", strlen("enable-ice"), &ice), "get enable-ice");
+        check(getInteger(service, "media-port", strlen("media-port"), &media), "get media-port");
+        Marker("NETWORK_DEFAULT enable-ice=" + std::to_string(ice) + " media-port=" + std::to_string(media));
+        const auto iceOption = Required(options, L"enable-ice");
+        if (iceOption != L"true" && iceOption != L"false") throw std::runtime_error("enable-ice must be true or false");
+        const bool requestedIce = iceOption == L"true";
+        const int64_t requestedMedia = std::stoll(Required(options, L"media-port"));
+        check(setBoolean(service, "enable-ice", strlen("enable-ice"), requestedIce), "set enable-ice");
+        check(setInteger(service, "media-port", strlen("media-port"), requestedMedia), "set media-port");
+        check(getBoolean(service, "enable-ice", strlen("enable-ice"), &ice), "read enable-ice");
+        check(getInteger(service, "media-port", strlen("media-port"), &media), "read media-port");
+        if (ice != requestedIce || media != requestedMedia) throw std::runtime_error("Network property readback mismatch");
+        Marker("NETWORK_READBACK enable-ice=" + std::to_string(ice) + " media-port=" + std::to_string(media));
+        Marker("NO_SERVICE_START property acceptance is not a media transport test");
+    }
+    catch (...) { destroy(service); throw; }
+    destroy(service);
+    return 0;
+}
+
 static int Service(const Options& options, const fs::path& runtime)
 {
     SetEnvironment(L"NV_CXR_OUTPUT_DIR", Required(options, L"log-dir"));
@@ -400,13 +442,15 @@ int wmain(int argc, wchar_t** argv)
             SetEnvironment(L"TEMP", directory);
         }
         const auto mode = Required(options, L"mode");
+        if (mode == L"network-properties")
+            return NetworkProperties(options, runtime);
         if (mode == L"service")
             return Service(options, runtime);
         if (mode == L"manager")
             return Manager(options, runtime);
         if (mode == L"client")
             return Client(options, runtime);
-        throw std::runtime_error("Mode must be service, manager or client");
+        throw std::runtime_error("Mode must be service, manager, client or network-properties");
     }
     catch (const std::exception& error) {
         Marker(std::string("ERROR ") + error.what());

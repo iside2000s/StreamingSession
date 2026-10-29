@@ -30,6 +30,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments\cloudxr-head
 
 可使用 `-SkipBuild` 复用已经编译的程序，使用 `-PrepareOnly` 仅生成配置。不要在真机测试进行中重新构建同一输出目录。
 
+`-NetworkMode IceAutomatic` 使用公开的 `enableIce: true` 与 `mediaPort: 0`，默认 `NativeFixed` 保留原配置。2026-10-29 的第三轮真机测试已确认 ICE 自动模式同样争用原生视频端口，不能作为一带二修复；保留此模式仅用于复现和后续版本对照。
+
 ## 设备连接
 
 1. 第一台客户端输入电脑 IP、端口 **55001**，点击 Connect，扫描 **CloudXR experiment — Seat A** 的二维码。

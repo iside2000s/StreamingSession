@@ -69,6 +69,8 @@ NVIDIA 公开 FAQ 仍只支持一个操作系统实例的一路串流。本实�
 
 详细实测结论见 [RESULTS.md](RESULTS.md)。
 
+`CloudXrProbe.exe --mode network-properties --runtime <SDK目录> --enable-ice true --media-port 0` 仅通过公开 C API 设置并读回网络属性，不启动运行时或绑定端口。属性被接受不代表原生媒体传输会采用该端口；后续真机结果见 [头显测试记录](../cloudxr-headset-test/RESULTS.md)。
+
 ## 参考
 
 - [CloudXR FAQ](https://docs.nvidia.com/cloudxr-sdk/latest/support/faq.html)

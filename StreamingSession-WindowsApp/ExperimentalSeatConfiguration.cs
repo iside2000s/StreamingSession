@@ -22,6 +22,7 @@ namespace FoveatedStreaming.WindowsSample
         public int SessionPort { get; set; }
         public int SignalingPort { get; set; }
         public int MediaPort { get; set; }
+        public bool EnableIce { get; set; }
         public string StateDirectory { get; set; }
         public string RouteDirectory { get; set; }
         public string BundleId { get; set; }
@@ -53,8 +54,10 @@ namespace FoveatedStreaming.WindowsSample
             IPAddress address;
             if (!IPAddress.TryParse(config.HostAddress, out address) || address.AddressFamily != AddressFamily.InterNetwork)
                 throw new InvalidOperationException("Experimental HostAddress must be an IPv4 address.");
-            foreach (int port in new[] { config.SessionPort, config.SignalingPort, config.MediaPort })
+            foreach (int port in new[] { config.SessionPort, config.SignalingPort })
                 if (port < 1024 || port > 65535) throw new InvalidOperationException("Invalid experimental port.");
+            if (config.MediaPort != 0 && (config.MediaPort < 1024 || config.MediaPort > 65535))
+                throw new InvalidOperationException("MediaPort must be zero (automatic) or 1024-65535.");
             if (config.SessionPort == config.SignalingPort || config.SessionPort == config.MediaPort || config.SignalingPort == config.MediaPort)
                 throw new InvalidOperationException("Each experimental port must be distinct.");
             if (string.IsNullOrWhiteSpace(config.BundleId) || string.IsNullOrWhiteSpace(config.DisplayName))
@@ -67,7 +70,7 @@ namespace FoveatedStreaming.WindowsSample
             Directory.CreateDirectory(config.StateDirectory);
             Directory.CreateDirectory(config.RouteDirectory);
             config.ClearRoute();
-            config.Log("START " + config.SeatId + " management=" + config.HostAddress + ":" + config.SessionPort + " signaling=" + config.SignalingPort);
+            config.Log("START " + config.SeatId + " management=" + config.HostAddress + ":" + config.SessionPort + " signaling=" + config.SignalingPort + " media=" + config.MediaPort + " ice=" + config.EnableIce);
             return config;
         }
 
