@@ -276,8 +276,9 @@ static int NetworkProperties(const Options& options, const fs::path& runtime)
         if (result != NV_CXR_SUCCESS) throw std::runtime_error(std::string("Property operation failed: ") + name + " result=" + std::to_string(result));
     };
     try {
-        const char* profile = "apple-vision-pro";
-        check(setString(service, "device-profile", strlen("device-profile"), profile, strlen(profile)), "device-profile");
+        const auto profileOption = options.find(L"profile");
+        const std::string profile = profileOption == options.end() ? "apple-vision-pro" : Utf8(profileOption->second);
+        check(setString(service, "device-profile", strlen("device-profile"), profile.c_str(), profile.size()), "device-profile");
         bool ice = false;
         int64_t media = -1;
         check(getBoolean(service, "enable-ice", strlen("enable-ice"), &ice), "get enable-ice");
@@ -331,12 +332,18 @@ static int Service(const Options& options, const fs::path& runtime)
             throw std::runtime_error(std::string("SDK rejected property: ") + property);
     };
     try {
-        const char* profile = "apple-vision-pro";
-        check(setString(service, "device-profile", strlen("device-profile"), profile, strlen(profile)), "device-profile");
+        const auto profileOption = options.find(L"profile");
+        const std::string profile = profileOption == options.end() ? "apple-vision-pro" : Utf8(profileOption->second);
+        check(setString(service, "device-profile", strlen("device-profile"), profile.c_str(), profile.size()), "device-profile");
         const char* endpoint = "127.0.0.1";
         check(setString(service, "endpoint-ip", strlen("endpoint-ip"), endpoint, strlen(endpoint)), "endpoint-ip");
         check(setInteger(service, "server-port", strlen("server-port"), std::stoll(Required(options, L"port"))), "server-port");
         check(setInteger(service, "media-port", strlen("media-port"), std::stoll(Required(options, L"media-port"))), "media-port");
+        const auto iceOption = options.find(L"enable-ice");
+        if (iceOption != options.end()) {
+            if (iceOption->second != L"true" && iceOption->second != L"false") throw std::runtime_error("enable-ice must be true or false");
+            check(setBoolean(service, "enable-ice", strlen("enable-ice"), iceOption->second == L"true"), "enable-ice");
+        }
         check(setBoolean(service, "audio-streaming", strlen("audio-streaming"), false), "audio-streaming");
         check(setBoolean(service, "mic-streaming", strlen("mic-streaming"), false), "mic-streaming");
         check(setBoolean(service, "runtime-foveation", strlen("runtime-foveation"), false), "runtime-foveation");

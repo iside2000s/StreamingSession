@@ -20,3 +20,5 @@ Microsoft 完整 Windows Server 2025 镜像的清单已可通过 MCR 读取，am
 `GpuEncodeProbe` 使用 NVIDIA 公共 NVENC 12.0 API。它检查 NVENC 成功返回非空编码数据，不解码输出，也不代表 CloudXR 所需的 HEVC、多视图、共享纹理、输入或性能验证通过。
 
 后续实际操作入口、作用范围和脚本见 [README.md](README.md)。在得到系统组件变更的明确授权后，才能尝试容器内探针。
+
+用户随后选择暂不修改系统组件，本轮未执行功能启用、容器引擎启动或镜像层下载，容器方案停止在准备阶段。

@@ -1,0 +1,12 @@
+{
+  "name": "streaming-session-webrtc-feasibility",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@nvidia/cloudxr": "file:out/nvidia-cloudxr-6.4.0.tgz",
+    "gl-matrix": "3.4.4",
+    "iwer": "2.7.0",
+    "long": "5.3.2"
+  },
+  "devDependencies": { "esbuild": "0.28.2" }
+}
