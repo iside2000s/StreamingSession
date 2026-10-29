@@ -67,6 +67,18 @@ namespace FoveatedStreaming.WindowsSample
             var ipv4Address = localIPAddresses.First((ipString) => ipString.AddressFamily == AddressFamily.InterNetwork);
             _MainViewModel.SelectedIPAddress = ipv4Address?.ToString() ?? localIPAddresses.First()?.ToString() ?? "";
 
+            var seat = ExperimentalSeatConfiguration.Current;
+            if (seat != null)
+            {
+                Title = "CloudXR experiment — Seat " + seat.SeatId.ToUpperInvariant();
+                _MainViewModel.SelectedIPAddress = seat.HostAddress;
+                _MainViewModel.Port = seat.SessionPort.ToString();
+                _MainViewModel.BundleID = seat.BundleId;
+                _MainViewModel.ForceQRCode = true;
+                if (seat.AutoStart)
+                    Dispatcher.BeginInvoke(new Action(() => ConnectButton_Click(null, null)));
+            }
+
             _MainViewModel.PropertyChanged += OnViewModelPropertyChanged;
         }
 
@@ -129,7 +141,9 @@ namespace FoveatedStreaming.WindowsSample
             }
 
             // Check for existing CloudXR processes that may be left over from a previous crashed session
-            var existingProcesses = CloudXRConnection.GetExistingCloudXRProcesses();
+            var existingProcesses = ExperimentalSeatConfiguration.Current == null
+                ? CloudXRConnection.GetExistingCloudXRProcesses()
+                : new System.Collections.Generic.List<System.Diagnostics.Process>();
             if (existingProcesses.Any())
             {
                 var processNames = string.Join(", ", existingProcesses.Select(p => p.ProcessName).Distinct());
@@ -195,7 +209,19 @@ namespace FoveatedStreaming.WindowsSample
             _MainViewModel.DisplayStartPanel = false;
 
             // Launch CloudXR service before we begin connecting
-            await _ConnectionManager.StartCloudXRService();
+            try
+            {
+                await _ConnectionManager.StartCloudXRService();
+            }
+            catch (Exception ex)
+            {
+                ExperimentalSeatConfiguration.Current?.Log("ERROR starting runtime: " + ex.Message);
+                _ConnectionManager?.Dispose();
+                _ConnectionManager = null;
+                _MainViewModel.DisplayDisconnectButton = false;
+                _MainViewModel.DisplayStartPanel = true;
+                MessageBox.Show("Could not start the streaming runtime: " + ex.Message, "Connect Error");
+            }
         }
 
         private void SMCLogButton_Click(object sender, RoutedEventArgs e)

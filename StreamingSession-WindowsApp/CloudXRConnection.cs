@@ -161,7 +161,7 @@ namespace FoveatedStreaming.WindowsSample
 
             public RPCClient()
             {
-                nv_rpc_result_t result = NvCloudXR.nv_rpc_client_create(null, out IntPtr clientPointer);
+                nv_rpc_result_t result = NvCloudXR.nv_rpc_client_create(ExperimentalSeatConfiguration.Current?.RpcPipeName, out IntPtr clientPointer);
                 if (result != nv_rpc_result_t.NV_RPC_SUCCESS)
                 {
                     throw new NVStreamManagerException(result);
@@ -192,6 +192,7 @@ namespace FoveatedStreaming.WindowsSample
 
             public void StartCloudXRService(string version = "6.0.0")
             {
+                version = ExperimentalSeatConfiguration.Current?.RuntimeVersion ?? version;
                 if (_DidDispose)
                 {
                     throw new ObjectDisposedException(nameof(RPCClient));
@@ -508,7 +509,7 @@ namespace FoveatedStreaming.WindowsSample
             // First, try to see if NVStreamManager.exe has already been launched (perhaps by a previous launch which crashed).
             // If it has been launched, kill it to clear out any transient state (after all, we did crash).
             Process existingProcess = GetProcessByPath(executablePath);
-            if (existingProcess != null)
+            if (existingProcess != null && ExperimentalSeatConfiguration.Current == null)
             {
                 existingProcess.Kill();
             }
@@ -522,6 +523,10 @@ namespace FoveatedStreaming.WindowsSample
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
+
+            var seat = ExperimentalSeatConfiguration.Current;
+            if (seat != null)
+                startInfo.Arguments = "--pipe \"" + seat.RpcPipeName + "\" --config \"" + seat.RuntimeConfigurationPath + "\"";
 
             _NVStreamManagerProcess = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
 

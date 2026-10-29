@@ -53,6 +53,8 @@ On iOS, you can leverage [StreamingSession.xcframework](./StreamingSession.xcfra
 
 The [Windows multi-instance probe](experiments/cloudxr-multi-instance/README.md) tests separate per-process temporary directories, runtime ports, and Stream Manager RPC endpoints. It has demonstrated concurrent OpenXR/D3D11 resource creation on the tested machine; dual-headset video streaming and multiplayer interactions are not yet implemented. See the [measured results](experiments/cloudxr-multi-instance/RESULTS.md).
 
+The subsequent [headset experiment](experiments/cloudxr-headset-test/README.md) adds two independent pairing windows and a source-IP signaling relay for existing visionOS clients. Actual headset testing found a native UDP media-port conflict when connecting both seats; it does **not** provide simultaneous dual-headset streaming. See the [headset results](experiments/cloudxr-headset-test/RESULTS.md).
+
 ## Further Reading
 
 - [Foveated Streaming](https://developer.apple.com/documentation/foveatedstreaming)

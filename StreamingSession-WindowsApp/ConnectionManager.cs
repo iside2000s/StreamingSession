@@ -111,6 +111,11 @@ namespace FoveatedStreaming.WindowsSample
 
         private void CheckActiveRuntime()
         {
+            if (ExperimentalSeatConfiguration.Current != null)
+            {
+                _viewModel.ShowRuntimeWarning = false;
+                return;
+            }
             string serverPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Server");
             string localJsonPath = CloudXRConnection.FindCloudXRRuntimeJson(serverPath);
             if (string.IsNullOrEmpty(localJsonPath))
@@ -151,6 +156,7 @@ namespace FoveatedStreaming.WindowsSample
 
         public void Dispose()
         {
+            ExperimentalSeatConfiguration.Current?.ClearRoute();
             _cloudXR?.Dispose();
             _bonjour?.Dispose();
             _sessionManagement?.Dispose();
@@ -162,6 +168,7 @@ namespace FoveatedStreaming.WindowsSample
 
         public async Task DisposeAsync()
         {
+            ExperimentalSeatConfiguration.Current?.ClearRoute();
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 _viewModel.BonjourStatus = _viewModel.CloudXRStatus = _viewModel.SessionManagementStatus = ConnectionStatus.Paused;
@@ -217,6 +224,7 @@ namespace FoveatedStreaming.WindowsSample
 
         public override async Task BarcodePresentationRequested(SessionInformation session)
         {
+            ExperimentalSeatConfiguration.Current?.Log("PAIRING QR_REQUEST");
             BitmapImage barcodeImage = GenerateBarcodeImage(session.barcode);
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -227,6 +235,7 @@ namespace FoveatedStreaming.WindowsSample
 
         public override async Task ConnectionErrorOccurred(string message)
         {
+            ExperimentalSeatConfiguration.Current?.Log("CONNECTION_ERROR " + message);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 _viewModel.SessionManagementStatus = ConnectionStatus.Stopped;
@@ -241,6 +250,8 @@ namespace FoveatedStreaming.WindowsSample
 
         public override async Task SessionStatusDidChange(SessionInformation session, string sessionStatus, CancellationToken cancellationToken)
         {
+            ExperimentalSeatConfiguration.Current?.Log("SESSION " + sessionStatus);
+            if (sessionStatus == SessionStatus.Disconnected) ExperimentalSeatConfiguration.Current?.ClearRoute();
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 // The QR code image can always be dismissed when session status is updated.
@@ -295,6 +306,7 @@ namespace FoveatedStreaming.WindowsSample
 
         private async Task OnCloudXRStateChange(CloudXRConnection.State newState)
         {
+            ExperimentalSeatConfiguration.Current?.Log("STATE runtime=" + newState.OpenXRRuntimeIsRunning + " app=" + newState.GameIsConnected + " headset=" + newState.CloudXRClientIsConnected);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 string resolvedLogPath = ResolveServerLogPath(newState.OpenXRLogFilePath);

@@ -51,7 +51,7 @@ namespace FoveatedStreaming.WindowsSample
             this.BundleID = bundleID;
             this.Endpoint = endpoint;
 
-            string instanceName = System.Net.Dns.GetHostName();
+            string instanceName = ExperimentalSeatConfiguration.Current?.DisplayName ?? System.Net.Dns.GetHostName();
             _Profile = new ServiceProfile(instanceName, ServiceType, (ushort)endpoint.Port, new[] { endpoint.Address });
 
             _Profile.Resources.Add(new TXTRecord
